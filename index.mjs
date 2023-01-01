@@ -1,7 +1,7 @@
 import Koa from 'koa';
 import route from 'koa-route';
 import ws from 'koa-websocket';
-import { setFrequency, setMode, eventBus, connect, receive, frequency, mode, tuningFreq } from './src/sdr.mjs';
+import { device, setFrequency, setMode, eventBus, connect, receive, frequency, mode, tuningFreq } from './src/sdr.mjs';
 
 const app = ws(new Koa());
 
@@ -19,7 +19,7 @@ app.ws.use(route.all('/data', ctx => {
   });
 
   function sendInfoToClient() {
-    ctx.websocket.send(JSON.stringify({ frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
+    ctx.websocket.send(JSON.stringify({ device: device.value, frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
   }
 
   sendInfoToClient();
