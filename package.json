@@ -1,0 +1,22 @@
+{
+  "name": "sdr-proxy",
+  "version": "1.0.0",
+  "description": "sdr proxy",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/talrasha007/sdr-proxy.git"
+  },
+  "author": "Tal (talrasha007@gmail.com)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/talrasha007/sdr-proxy/issues"
+  },
+  "homepage": "https://github.com/talrasha007/sdr-proxy#readme",
+  "dependencies": {
+    "rtlsdrjs": "^0.0.0"
+  }
+}
