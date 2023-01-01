@@ -61,7 +61,9 @@ export async function receive() {
     }
     const samples = await sdr.readSamples(SAMPLES_PER_BUF)
     if (samples.byteLength > 0) {
-      eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq })
+      setImmediate(() => {
+        eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq })
+      })
     }
   }
 }
