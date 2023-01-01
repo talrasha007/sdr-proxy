@@ -1,9 +1,11 @@
 import Koa from 'koa';
 import route from 'koa-route';
 import ws from 'koa-websocket';
+import fs from 'koa-static';
 import { device, setFrequency, setMode, eventBus, connect, receive, frequency, mode, tuningFreq } from './src/sdr.mjs';
 
 const app = ws(new Koa());
+app.use(fs('./dist'));
 
 app.ws.use(route.all('/data', ctx => {
   ctx.websocket.on('message', function(message) {
