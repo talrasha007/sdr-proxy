@@ -54,10 +54,12 @@ export async function receive() {
       await sdr.setCenterFrequency(currentFreq)
       await sdr.resetBuffer()
     }
+
+    const currentTuningFreq = tuningFreq.value
     const samples = await sdr.readSamples(SAMPLES_PER_BUF)
     if (samples.byteLength > 0) {
       setImmediate(() => {
-        eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq })
+        eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq, tuningFreq: currentTuningFreq })
       })
     }
   }
@@ -77,12 +79,12 @@ export async function setMode(data) {
 eventBus.on('samples', (data) => {
   const samples = data.samples
   totalReceived.value += samples.byteLength
-  let [left, right, sl] = decoder.process(samples, true, -tuningFreq.value)
+  let [left, right, sl] = decoder.process(samples, true, -data.tuningFreq)
 
   signalLevel.value = sl
   // left = new Float32Array(left);
   // right = new Float32Array(right);
   // player.play(left, right, signalLevel.value, 0.15);
   latency.value = Date.now() - data.ts
-  eventBus.emit('sdr_data', { type: 'decoded_data', left, right, signalLevel: signalLevel.value, frequency: data.frequency + tuningFreq.value, ts: data.ts });
+  eventBus.emit('sdr_data', { type: 'decoded_data', left, right, signalLevel: signalLevel.value, frequency: data.frequency + data.tuningFreq, ts: data.ts });
 })
