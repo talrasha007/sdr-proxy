@@ -2,7 +2,7 @@ import EventEmitter from 'events'
 import RtlSdr from 'rtlsdrjs'
 import Decoder from './decode-worker.mjs'
 
-const eventBus = new EventEmitter();
+export const eventBus = new EventEmitter();
 
 function ref(v) {
   return { value: v }
@@ -114,8 +114,9 @@ eventBus.on('samples', (data) => {
   }
 
   signalLevel.value = sl
-  left = new Float32Array(left);
-  right = new Float32Array(right);
+  // left = new Float32Array(left);
+  // right = new Float32Array(right);
   // player.play(left, right, signalLevel.value, 0.15);
   latency.value = Date.now() - data.ts
+  eventBus.emit('sdr_data', { type: 'decoded_data', left, right, signalLevel: signalLevel.value, ts: data.ts });
 })

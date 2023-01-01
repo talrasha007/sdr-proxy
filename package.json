@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/talrasha007/sdr-proxy#readme",
   "dependencies": {
+    "koa": "^2.14.1",
+    "koa-route": "^3.2.0",
+    "koa-websocket": "^7.0.0",
     "rtlsdrjs": "^0.0.0"
   }
 }
