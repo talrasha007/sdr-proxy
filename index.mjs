@@ -1,13 +1,21 @@
 import Koa from 'koa';
 import route from 'koa-route';
 import ws from 'koa-websocket';
-import { eventBus, connect, receive, frequency, mode, tuningFreq } from './src/sdr.mjs';
+import { setFrequency, setMode, eventBus, connect, receive, frequency, mode, tuningFreq } from './src/sdr.mjs';
 
 const app = ws(new Koa());
 
 app.ws.use(route.all('/data', ctx => {
   ctx.websocket.on('message', function(message) {
-    console.log(message);
+    message = JSON.parse(message.toString());
+    switch (message.type) {
+      case 'frequency':
+        setFrequency(message);
+        break;
+      case 'mode':
+        setMode(message);
+        break;
+    }
   });
 
   function sendInfoToClient() {
@@ -17,13 +25,14 @@ app.ws.use(route.all('/data', ctx => {
   sendInfoToClient();
 
   function sendSdrDataToClient(data) {
-    const { left, right, signalLevel, ts } = data;
-    const buf = new ArrayBuffer(left.byteLength + right.byteLength + 8 * 2)
+    const { left, right, signalLevel, ts, frequency } = data;
+    const buf = new ArrayBuffer(left.byteLength + right.byteLength + 8 * 2 + 4)
     new Uint8Array(buf, 0, left.byteLength).set(new Int8Array(left))
     new Uint8Array(buf, left.byteLength, right.byteLength).set(new Int8Array(right))
     const dv = new DataView(buf)
     dv.setFloat64(left.byteLength + right.byteLength, signalLevel)
     dv.setFloat64(left.byteLength + right.byteLength + 8, ts)
+    dv.setUint32(left.byteLength + right.byteLength + 16, frequency)
     ctx.websocket.send(buf)
   }
 
