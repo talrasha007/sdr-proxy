@@ -9,13 +9,14 @@ const app = ws(new Koa());
 app.use(fs('./dist'));
 
 const sdrLoop = _.once((async function() {
+  console.log('Connect to sdr device...');
   await connect();
   await receive();
 }))
 
 app.ws.use(route.all('/data', ctx => {
   sdrLoop();
-  
+
   ctx.websocket.on('message', function(message) {
     message = JSON.parse(message.toString());
     switch (message.type) {
