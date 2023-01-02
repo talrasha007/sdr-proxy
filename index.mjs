@@ -30,7 +30,7 @@ app.ws.use(route.all('/data', ctx => {
   });
 
   function sendInfoToClient() {
-    ctx.websocket.send(JSON.stringify({ device: device.value, frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
+    ctx.websocket.send(JSON.stringify({ ts: Date.now(), device: device.value, frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
   }
 
   sendInfoToClient();
