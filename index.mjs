@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import Koa from 'koa';
 import route from 'koa-route';
 import ws from 'koa-websocket';
@@ -7,7 +8,14 @@ import { device, setFrequency, setMode, eventBus, connect, receive, frequency, m
 const app = ws(new Koa());
 app.use(fs('./dist'));
 
+const sdrLoop = _.once((async function() {
+  await connect();
+  await receive();
+}))
+
 app.ws.use(route.all('/data', ctx => {
+  sdrLoop();
+  
   ctx.websocket.on('message', function(message) {
     message = JSON.parse(message.toString());
     switch (message.type) {
@@ -47,8 +55,3 @@ app.ws.use(route.all('/data', ctx => {
 
 console.log('Listen on port 3000')
 app.listen(3000);
-
-(async function() {
-  await connect();
-  await receive();
-})().catch(console.error);
