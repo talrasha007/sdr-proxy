@@ -17,23 +17,9 @@ const sdrLoop = _.once((async function() {
 app.ws.use(route.all('/data', ctx => {
   sdrLoop();
 
-  ctx.websocket.on('message', function(message) {
-    message = JSON.parse(message.toString());
-    switch (message.type) {
-      case 'frequency':
-        setFrequency(message);
-        break;
-      case 'mode':
-        setMode(message);
-        break;
-    }
-  });
-
   function sendInfoToClient() {
     ctx.websocket.send(JSON.stringify({ ts: Date.now(), device: device.value, frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
   }
-
-  sendInfoToClient();
 
   function sendSdrDataToClient(data) {
     const { left, right, signalLevel, ts, frequency } = data;
@@ -47,10 +33,24 @@ app.ws.use(route.all('/data', ctx => {
     ctx.websocket.send(buf)
   }
 
-  eventBus.on('sdr_data', sendSdrDataToClient);
-  ctx.websocket.on('close', () => {
-    console.log('socket closed');
-    eventBus.off('sdr_data', sendSdrDataToClient);
+  ctx.websocket.on('message', function(message) {
+    message = JSON.parse(message.toString());
+    switch (message.type) {
+      case 'frequency':
+        setFrequency(message);
+        break;
+      case 'mode':
+        setMode(message);
+        break;
+      case 'init':
+        sendInfoToClient();
+        eventBus.on('sdr_data', sendSdrDataToClient);
+        ctx.websocket.on('close', () => {
+          console.log('socket closed');
+          eventBus.off('sdr_data', sendSdrDataToClient);
+        });
+        break;
+    }
   });
 }))
 
