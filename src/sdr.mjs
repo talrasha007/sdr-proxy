@@ -1,4 +1,5 @@
-import exp from 'constants';
+import _ from 'lodash';
+import fs from 'fs';
 import EventEmitter from 'events'
 import RtlSdr from 'rtlsdrjs'
 import Decoder from './decode-worker.mjs'
@@ -25,6 +26,18 @@ export const latency = ref(0)
 export const signalLevel = ref(0)
 export const device = ref('')
 export const totalReceived = ref(0)
+
+const save = _.debounce(() => {
+  fs.writeFileSync('./state.json', JSON.stringify({ mode: mode.value, frequency: frequency.value }));
+}, 1000);
+
+try {
+  const saved = JSON.parse(fs.readFileSync('./state.json'));
+  mode.value = saved.mode
+  frequency.value = saved.frequency
+} catch(e) {
+  console.log('No saved state, use default value.');
+}
 
 export async function connect() {
   sdr = await RtlSdr.requestDevice()
@@ -70,10 +83,13 @@ export async function setFrequency(data) {
     frequency.value = data.frequency;
     tuningFreq.value = data.tuningFreq;
   }
+
+  save();
 }
 
 export async function setMode(data) {
   decoder.setMode(data.mode);
+  save();
 }
 
 eventBus.on('samples', (data) => {
