@@ -89,6 +89,7 @@ export async function setFrequency(data) {
 
 export async function setMode(data) {
   decoder.setMode(data.mode);
+  mode.value = data.mode;
   save();
 }
 
