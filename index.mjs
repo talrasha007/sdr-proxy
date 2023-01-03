@@ -14,8 +14,8 @@ const sdrLoop = _.once((async function() {
   await receive();
 }))
 
+sdrLoop();
 app.ws.use(route.all('/data', ctx => {
-  sdrLoop();
 
   function sendInfoToClient() {
     ctx.websocket.send(JSON.stringify({ ts: Date.now(), device: device.value, frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
