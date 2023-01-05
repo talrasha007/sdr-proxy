@@ -33,6 +33,16 @@ app.ws.use(route.all('/data', ctx => {
     ctx.websocket.send(buf)
   }
 
+  function sendRawDataToClient(data) {
+    const { samples, ts, frequency } = data;
+    const buf = new ArrayBuffer(samples.byteLength + 8 + 4)
+    new Uint8Array(buf, 0, samples.byteLength).set(new Int8Array(samples))
+    const dv = new DataView(buf)
+    dv.setFloat64(samples.byteLength, ts)
+    dv.setUint32(samples.byteLength + 8, frequency)
+    ctx.websocket.send(buf)
+  }
+
   ctx.websocket.on('message', function(message) {
     message = JSON.parse(message.toString());
     switch (message.type) {
@@ -44,10 +54,10 @@ app.ws.use(route.all('/data', ctx => {
         break;
       case 'init':
         sendInfoToClient();
-        eventBus.on('sdr_data', sendSdrDataToClient);
+        eventBus.on('raw_data', sendRawDataToClient);
         ctx.websocket.on('close', () => {
           console.log('socket closed');
-          eventBus.off('sdr_data', sendSdrDataToClient);
+          eventBus.off('raw_data', sendRawDataToClient);
         });
         break;
     }

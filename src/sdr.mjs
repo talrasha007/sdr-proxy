@@ -71,9 +71,10 @@ export async function receive() {
     const currentTuningFreq = tuningFreq.value
     const samples = await sdr.readSamples(SAMPLES_PER_BUF)
     if (samples.byteLength > 0) {
-      setImmediate(() => {
-        eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq, tuningFreq: currentTuningFreq })
-      })
+      // setImmediate(() => {
+      //   eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq, tuningFreq: currentTuningFreq })
+      // })
+      eventBus.emit('raw_data', { samples, ts: Date.now(), frequency: currentFreq })
     }
   }
 }
