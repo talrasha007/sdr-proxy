@@ -64,5 +64,6 @@ app.ws.use(route.all('/data', ctx => {
   });
 }))
 
-console.log('Listen on port 3000')
-app.listen(3000);
+const port = process.env.PROD ? 80 : 3000
+console.log(`Listen on port ${port}`)
+app.listen(port);
