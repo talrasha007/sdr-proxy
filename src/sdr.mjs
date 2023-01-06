@@ -10,8 +10,8 @@ function ref(v) {
   return { value: v }
 }
 
-const SAMPLE_RATE = 1024 * 1e3 // Must be a multiple of 512 * BUFS_PER_SEC
-const BUFS_PER_SEC = 100
+const SAMPLE_RATE = 256 * 1e3 // Must be a multiple of 512 * BUFS_PER_SEC
+const BUFS_PER_SEC = 50
 const SAMPLES_PER_BUF = Math.floor(SAMPLE_RATE / BUFS_PER_SEC)
 const MIN_FREQ = 5e5
 const MAX_FREQ = 8e8
