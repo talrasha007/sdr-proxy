@@ -84,7 +84,9 @@ app.ws.use(route.all('/data', ctx => {
       case 'init':
         sendInfoToClient();
         eventBus.on('raw_data', sendRawDataToClient);
+        const checkInterval = setInterval(() => { if (!sdrRunning) ctx.websocket.close() }, 1000);
         ctx.websocket.on('close', () => {
+          clearInterval(checkInterval);
           console.log('socket closed');
           eventBus.off('raw_data', sendRawDataToClient);
         });
