@@ -21,6 +21,22 @@ app.ws.use(route.all('/data', ctx => {
     ctx.websocket.send(JSON.stringify({ ts: Date.now(), device: device.value, frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
   }
 
+  let sending = 0
+  let drop = 0
+  const logDrop = _.debounce(() => {
+    console.log(new Date(), 'drop:', drop)
+    drop = 0
+  }, 1000)
+
+  function wsSend(buf) {
+    if (sending === 0) {
+      sending = 1
+      ctx.websocket.send(buf, () => { sending = 0 })
+    } else {
+      logDrop(drop++)
+    }
+  }
+
   function sendSdrDataToClient(data) {
     const { left, right, signalLevel, ts, frequency } = data;
     const buf = new ArrayBuffer(left.byteLength + right.byteLength + 8 * 2 + 4)
@@ -30,7 +46,7 @@ app.ws.use(route.all('/data', ctx => {
     dv.setFloat64(left.byteLength + right.byteLength, signalLevel)
     dv.setFloat64(left.byteLength + right.byteLength + 8, ts)
     dv.setUint32(left.byteLength + right.byteLength + 16, frequency)
-    ctx.websocket.send(buf)
+    wsSend(buf)
   }
 
   function sendRawDataToClient(data) {
@@ -40,7 +56,7 @@ app.ws.use(route.all('/data', ctx => {
     const dv = new DataView(buf)
     dv.setFloat64(samples.byteLength, ts)
     dv.setUint32(samples.byteLength + 8, frequency)
-    ctx.websocket.send(buf)
+    wsSend(buf)
   }
 
   ctx.websocket.on('message', function(message) {
