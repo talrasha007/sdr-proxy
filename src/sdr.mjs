@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import fs from 'fs';
 import EventEmitter from 'events'
-import RtlSdr from 'rtlsdrjs'
-import Decoder from './decode-worker.mjs'
+import RtlSdr from '@sdr.cool/rtlsdrjs'
+import decoder from '@sdr.cool/demodulator-wasm'
 
 export const eventBus = new EventEmitter();
 
@@ -10,14 +10,12 @@ function ref(v) {
   return { value: v }
 }
 
-const SAMPLE_RATE = 256 * 1e3 // Must be a multiple of 512 * BUFS_PER_SEC
+const SAMPLE_RATE = 1024 * 1e3 // Must be a multiple of 512 * BUFS_PER_SEC
 const BUFS_PER_SEC = 50
 const SAMPLES_PER_BUF = Math.floor(SAMPLE_RATE / BUFS_PER_SEC)
-const MIN_FREQ = 5e5
-const MAX_FREQ = 8e8
+const AUDIO_RATE = 48 * 1e3
 
 let sdr = null
-let decoder = null
 
 export const mode = ref('FM')
 export const frequency = ref(88.7 * 1e6)
@@ -53,7 +51,7 @@ export async function disconnect() {
 }
 
 export async function receive() {
-  decoder = decoder || new Decoder()
+  decoder.setRate(SAMPLE_RATE, AUDIO_RATE)
   decoder.setMode(mode.value)
 
   await sdr.open({ ppm: 0.5 })
@@ -71,10 +69,10 @@ export async function receive() {
     const currentTuningFreq = tuningFreq.value
     const samples = await sdr.readSamples(SAMPLES_PER_BUF)
     if (samples.byteLength > 0) {
-      // setImmediate(() => {
-      //   eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq, tuningFreq: currentTuningFreq })
-      // })
-      eventBus.emit('raw_data', { samples, ts: Date.now(), frequency: currentFreq })
+      setImmediate(() => {
+        eventBus.emit('samples', { type: 'samples', samples, ts: Date.now(), frequency: currentFreq, tuningFreq: currentTuningFreq })
+      })
+      // eventBus.emit('raw_data', { samples, ts: Date.now(), frequency: currentFreq })
     }
   }
 }
@@ -97,12 +95,9 @@ export async function setMode(data) {
 eventBus.on('samples', (data) => {
   const samples = data.samples
   totalReceived.value += samples.byteLength
-  let [left, right, sl] = decoder.process(samples, true, -data.tuningFreq)
+  let [left, right, sl] = decoder.demodulate(samples, -data.tuningFreq)
 
   signalLevel.value = sl
-  // left = new Float32Array(left);
-  // right = new Float32Array(right);
-  // player.play(left, right, signalLevel.value, 0.15);
   latency.value = Date.now() - data.ts
   eventBus.emit('sdr_data', { type: 'decoded_data', left, right, signalLevel: signalLevel.value, frequency: data.frequency + data.tuningFreq, ts: data.ts });
 })

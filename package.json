@@ -17,11 +17,12 @@
   },
   "homepage": "https://github.com/talrasha007/sdr-proxy#readme",
   "dependencies": {
+    "@sdr.cool/demodulator-wasm": "^0.1.1",
+    "@sdr.cool/rtlsdrjs": "^0.1.0",
     "koa": "^2.14.1",
     "koa-route": "^3.2.0",
     "koa-static": "^5.0.0",
     "koa-websocket": "^7.0.0",
-    "lodash": "^4.17.21",
-    "rtlsdrjs": "https://github.com/sdr-cool/rtlsdrjs.git"
+    "lodash": "^4.17.21"
   }
 }
