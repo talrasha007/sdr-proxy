@@ -11,7 +11,7 @@ function ref(v) {
 }
 
 const SAMPLE_RATE = 1024 * 1e3 // Must be a multiple of 512 * BUFS_PER_SEC
-const BUFS_PER_SEC = 10
+const BUFS_PER_SEC = 50
 const SAMPLES_PER_BUF = Math.floor(SAMPLE_RATE / BUFS_PER_SEC)
 const AUDIO_RATE = 48 * 1e3
 
