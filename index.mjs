@@ -1,11 +1,11 @@
-import _ from 'lodash';
-import Koa from 'koa';
-import route from 'koa-route';
-import ws from 'koa-websocket';
+import _ from 'lodash'
+import Koa from 'koa'
+import route from 'koa-route'
+import ws from 'koa-websocket'
 import fs from 'koa-static'
 
 import { proto } from '@sdr.cool/utils'
-import { setFrequency, setMode, eventBus, start, isRunning, frequency, mode, tuningFreq } from './src/sdr.mjs'
+import { setFrequency, setMode, eventBus, start, isRunning, getInfo } from './src/sdr.mjs'
 
 const app = ws(new Koa())
 app.use(fs('./dist'))
@@ -27,54 +27,40 @@ app.ws.use(route.all('/data', ctx => {
     drop = 0
   }, 1000)
 
-  function wsSend(buf) {
+  function wsSend(data) {
     if (sending === 0) {
       sending = 1
-      ctx.websocket.send(buf, () => { sending = 0 })
+      ctx.websocket.send(proto.encode(data), () => { sending = 0 })
     } else {
       logDrop(drop++)
     }
   }
 
-  function sendSdrDataToClient(data) {
-    wsSend(proto.encode(data))
-  }
-
-  function sendRawDataToClient(data) {
-    const { samples, ts, frequency } = data;
-    const buf = new ArrayBuffer(samples.byteLength + 8 + 4)
-    new Uint8Array(buf, 0, samples.byteLength).set(new Int8Array(samples))
-    const dv = new DataView(buf)
-    dv.setFloat64(samples.byteLength, ts)
-    dv.setUint32(samples.byteLength + 8, frequency)
-    wsSend(buf)
-  }
-
   ctx.websocket.on('message', function(message) {
-    message = JSON.parse(message.toString());
+    message = JSON.parse(message.toString())
     switch (message.type) {
       case 'frequency':
-        setFrequency(message);
-        break;
+        setFrequency(message)
+        break
       case 'mode':
-        setMode(message);
-        break;
+        setMode(message)
+        break
       case 'init':
-        sendInfoToClient();
-        // eventBus.on('raw_data', sendRawDataToClient);
-        eventBus.on('sdr_data', sendSdrDataToClient)
-        const checkInterval = setInterval(() => { if (!isRunning()) ctx.websocket.close() }, 1000);
+        wsSend(getInfo())
+        // eventBus.on('raw_data', sendRawDataToClient)
+        eventBus.on('sdr_data', wsSend)
+        const checkInterval = setInterval(() => { if (!isRunning()) ctx.websocket.close() }, 1000)
         ctx.websocket.on('close', () => {
-          clearInterval(checkInterval);
-          console.log('socket closed');
-          eventBus.off('sdr_data', sendSdrDataToClient);
-          // eventBus.off('raw_data', sendRawDataToClient);
-        });
-        break;
+          clearInterval(checkInterval)
+          console.log('socket closed')
+          eventBus.off('sdr_data', wsSend)
+          // eventBus.off('raw_data', sendRawDataToClient)
+        })
+        break
     }
-  });
+  })
 }))
 
 const port = process.env.PROD ? 80 : 3000
 console.log(`Listen on port ${port}`)
-app.listen(port);
+app.listen(port)

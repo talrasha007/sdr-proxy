@@ -26,6 +26,10 @@ export function isRunning() {
   return sdrLoop.isRunning()
 }
 
+export function getInfo() {
+  return { frequency, tuningFreq, mode, ts: Date.now() }
+}
+
 export function start() {
   decoder.setMode(mode)
   sdrLoop.setFrequency(frequency)
