@@ -37,7 +37,7 @@ export function start() {
     setImmediate(() => eventBus.emit('samples', { ts: Date.now(), samples, frequency, tuningFreq }))
   }, () => tuningFreq).catch((e) => {
     console.error(e)
-    sdrLoop.stop()
+    sdrLoop.stop().catch(console.error)
   })
 }
 
