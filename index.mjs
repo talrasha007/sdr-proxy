@@ -2,38 +2,22 @@ import _ from 'lodash';
 import Koa from 'koa';
 import route from 'koa-route';
 import ws from 'koa-websocket';
-import fs from 'koa-static';
+import fs from 'koa-static'
 
 import { proto } from '@sdr.cool/utils'
-import { device, setFrequency, setMode, eventBus, connect, receive, frequency, mode, tuningFreq } from './src/sdr.mjs';
+import { setFrequency, setMode, eventBus, start, isRunning, frequency, mode, tuningFreq } from './src/sdr.mjs'
 
-const app = ws(new Koa());
-app.use(fs('./dist'));
-
-let sdrRunning = false;
-async function sdrLoop() {
-  if (!sdrRunning) {
-    try {
-      sdrRunning = true;
-      console.log('Connect to sdr device...');
-      await connect();
-      await receive();
-    }
-    catch(e) {
-      console.error(e.message || e);
-    }
-    finally {
-      console.log('sdrLoop is no longer running');
-      sdrRunning = false;
-    }
-  }
-}
+const app = ws(new Koa())
+app.use(fs('./dist'))
 
 app.ws.use(route.all('/data', ctx => {
-  sdrLoop();
+  if (!isRunning()) {
+    console.log('Start sdr loop...')
+    start()
+  }
 
   function sendInfoToClient() {
-    ctx.websocket.send(JSON.stringify({ ts: Date.now(), device: device.value, frequency: frequency.value, mode: mode.value, tuningFreq: tuningFreq.value }));
+    ctx.websocket.send(JSON.stringify({ ts: Date.now(), frequency: frequency, mode: mode, tuningFreq: tuningFreq }))
   }
 
   let sending = 0
@@ -79,7 +63,7 @@ app.ws.use(route.all('/data', ctx => {
         sendInfoToClient();
         // eventBus.on('raw_data', sendRawDataToClient);
         eventBus.on('sdr_data', sendSdrDataToClient)
-        const checkInterval = setInterval(() => { if (!sdrRunning) ctx.websocket.close() }, 1000);
+        const checkInterval = setInterval(() => { if (!isRunning()) ctx.websocket.close() }, 1000);
         ctx.websocket.on('close', () => {
           clearInterval(checkInterval);
           console.log('socket closed');
