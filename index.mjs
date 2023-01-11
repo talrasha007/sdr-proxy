@@ -3,6 +3,8 @@ import Koa from 'koa';
 import route from 'koa-route';
 import ws from 'koa-websocket';
 import fs from 'koa-static';
+
+import { proto } from '@sdr.cool/utils'
 import { device, setFrequency, setMode, eventBus, connect, receive, frequency, mode, tuningFreq } from './src/sdr.mjs';
 
 const app = ws(new Koa());
@@ -51,15 +53,7 @@ app.ws.use(route.all('/data', ctx => {
   }
 
   function sendSdrDataToClient(data) {
-    const { left, right, signalLevel, ts, frequency } = data;
-    const buf = new ArrayBuffer(left.byteLength + right.byteLength + 8 * 2 + 4)
-    new Uint8Array(buf, 0, left.byteLength).set(new Int8Array(left))
-    new Uint8Array(buf, left.byteLength, right.byteLength).set(new Int8Array(right))
-    const dv = new DataView(buf)
-    dv.setFloat64(left.byteLength + right.byteLength, signalLevel)
-    dv.setFloat64(left.byteLength + right.byteLength + 8, ts)
-    dv.setUint32(left.byteLength + right.byteLength + 16, frequency)
-    wsSend(buf)
+    wsSend(proto.encode(data))
   }
 
   function sendRawDataToClient(data) {

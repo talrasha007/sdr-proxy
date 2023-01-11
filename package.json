@@ -19,6 +19,7 @@
   "dependencies": {
     "@sdr.cool/demodulator-wasm": "^0.1.1",
     "@sdr.cool/rtlsdrjs": "^0.1.0",
+    "@sdr.cool/utils": "file:../utils",
     "koa": "^2.14.1",
     "koa-route": "^3.2.0",
     "koa-static": "^5.0.0",
